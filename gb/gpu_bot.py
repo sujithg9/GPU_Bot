@@ -14,6 +14,7 @@ import multiprocessing
 from multiprocessing import Pool
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
+import latest_user_agents
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -52,7 +53,7 @@ def get_user_details():
 
 def web_bot(gpu_data):
     options = webdriver.ChromeOptions()
-    user_agent = get_random_ua_proxy(constants.USER_AGENTS_FILE)
+    user_agent = latest_user_agents.get_random_user_agent()  # get_random_ua_proxy(constants.USER_AGENTS_FILE)
     options.add_argument(f'user-agent={user_agent}')
     driver = webdriver.Chrome(chrome_options=options, executable_path=constants.CHROME_DRIVER_PATH)
     driver.get(gpu_data["link"])
@@ -74,7 +75,7 @@ def web_scraper(gpu_data):
     available = False
     try:
         headers = {
-            'user-agent': get_random_ua_proxy(constants.USER_AGENTS_FILE),
+            'user-agent': latest_user_agents.get_random_user_agent(),  # get_random_ua_proxy(constants.USER_AGENTS_FILE)
         }
         proxies = {
             'http': get_random_ua_proxy(constants.PROXIES_FILE)
@@ -88,7 +89,6 @@ def web_scraper(gpu_data):
                     button_attrs = button_element.attrs
                     if button_attrs["data-sku-id"] in source_url and button_attrs["data-button-state"] == "ADD_TO_CART":
                         available = True
-        print(available)
         if available:
             log.info(f"GPU - {source_url} is Available {available}. Trying to add the item to the cart in the browser")
             web_bot(gpu_data)

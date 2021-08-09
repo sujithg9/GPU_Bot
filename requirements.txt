@@ -1,8 +1,8 @@
 bs4
-numpy
+latest-user-agents
 notify_run
-selenium
-twilio
+numpy
 requests
+selenium
 tornado
-
+twilio
