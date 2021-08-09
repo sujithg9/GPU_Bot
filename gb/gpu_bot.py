@@ -67,6 +67,7 @@ def web_bot(gpu_data):
         time.sleep(constants.TIME_BEFORE_WINDOW_IS_CLOSED)
     except Exception as ex:
         log.exception("Failed to find add to card : %s", str(ex.__str__()))
+        driver.close()
     finally:
         driver.close()
 
@@ -91,9 +92,11 @@ def web_scraper(gpu_data):
                     if button_attrs["data-sku-id"] in source_url and button_attrs["data-button-state"] == "ADD_TO_CART":
                         available = True
         if available:
-            log.info(f"GPU - {source_url} is Available {available}. Trying to add the item to the cart in the browser")
+            log.info(f"GPU - {source_url} is Available. Trying to add the item to the cart in the browser")
             send_push_notifications_android(f"GPU {gpu_data['name']} is available look up under {gpu_data['link']}")
             web_bot(gpu_data)
+        else:
+            log.info(f"GPU - {source_url} is not Available.")
     except Exception as ex:
         log.exception(f"Failed while Web Scraping Site - {source_url} : {str(ex)}")
     return available
@@ -147,12 +150,15 @@ def configure_logger():
 
 
 def gpu_hunter(args=None):
+    log.info("Looking up for GPUs availability ...")
     gpus_data = constants.NVIDIA_3060_TI_DETAILS if not args.test else constants.TEST_DATA
     pool = Pool(min(len(gpus_data), multiprocessing.cpu_count()))
     result = pool.map(web_scraper, gpus_data)
     if len(gpus_data) == len(result):
         pool.terminate()
-    log.info("GPU hunt operation completed.")
+
+    log.info("One or more GPUs are available.") if any(r is True for r in result) \
+        else log.info("No GPUs are available, keep trying ...")
 
 
 def initialize_bbb_lookup_loop(args=None):
@@ -163,6 +169,7 @@ def initialize_bbb_lookup_loop(args=None):
 
     lookup_cb = tornado.ioloop.PeriodicCallback(functools.partial(gpu_hunter, args),
                                                 constants.CHECK_FREQUENCY)
+    log.info("Initializing GPU hunt bot ...")
     lookup_cb.start()
     main_event_loop.start()
 
