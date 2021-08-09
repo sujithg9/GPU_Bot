@@ -1,2 +1,2 @@
 # GPU_Bot
-A bot to look up GPU available on different site and send out notifications if available.
+A bot to look up GPUs available on different sites and send out notifications if available.
