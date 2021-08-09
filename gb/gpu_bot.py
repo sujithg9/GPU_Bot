@@ -67,6 +67,7 @@ def web_bot(gpu_data):
         time.sleep(constants.TIME_BEFORE_WINDOW_IS_CLOSED)
     except Exception as ex:
         log.exception("Failed to find add to card : %s", str(ex.__str__()))
+    finally:
         driver.close()
 
 
@@ -91,8 +92,8 @@ def web_scraper(gpu_data):
                         available = True
         if available:
             log.info(f"GPU - {source_url} is Available {available}. Trying to add the item to the cart in the browser")
-            web_bot(gpu_data)
             send_push_notifications_android(f"GPU {gpu_data['name']} is available look up under {gpu_data['link']}")
+            web_bot(gpu_data)
     except Exception as ex:
         log.exception(f"Failed while Web Scraping Site - {source_url} : {str(ex)}")
     return available
@@ -147,7 +148,6 @@ def configure_logger():
 
 def gpu_hunter(args=None):
     gpus_data = constants.NVIDIA_3060_TI_DETAILS if not args.test else constants.TEST_DATA
-    print(gpus_data)
     pool = Pool(min(len(gpus_data), multiprocessing.cpu_count()))
     result = pool.map(web_scraper, gpus_data)
     if len(gpus_data) == len(result):
