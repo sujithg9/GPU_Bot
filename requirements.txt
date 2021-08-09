@@ -1,0 +1,8 @@
+bs4
+numpy
+notify_run
+selenium
+twilio
+requests
+tornado
+
