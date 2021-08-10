@@ -22,6 +22,11 @@ NVIDIA_3060_TI_DETAILS = [
         "name": "EVGA NVIDIA RTX 3060 Ti",
         "link": "https://www.bestbuy.com/site/evga-nvidia-geforce-rtx-3060-ti-"
                 "ftw3-gaming-8gb-gddr6-pci-express-4-0-graphics-card/6444444.p?skuId=6444444",
+    },
+    {
+        "name": "Gigabyte RTX 3060 Ti AORUS MASTER",
+        "link": "https://www.bhphotovideo.com/c/product/1606945-REG/gigabyte_gv_"
+                "n306taorus_m_8gd_aorus_rtx_3060_ti.html",
     }
 ]
 TEST_DATA = [
