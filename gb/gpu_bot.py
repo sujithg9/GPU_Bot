@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import re
 import json
 import time
 import logging
@@ -10,6 +9,7 @@ import argparse
 import functools
 import tornado.ioloop
 import requests
+import random
 import multiprocessing
 from multiprocessing import Pool
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
@@ -36,7 +36,7 @@ def get_random_ua_proxy(ua_proxy_file):
         if len(lines):
             prng = np.random.RandomState()
             index = prng.permutation(len(lines) - 1)
-            idx = np.asarray(index, dtype=np.integer)[0]
+            idx = np.asarray(index, dtype=np.int32)[0]
             random_ua_proxy = lines[int(idx)]
     except Exception as ex:
         log.exception(f'Exception in random_ua : {str(ex)}')
@@ -51,7 +51,7 @@ def get_user_details():
     return usr_data
 
 
-def web_bot(gpu_data):
+def web_bot(gpu_data, css_id):
     options = webdriver.ChromeOptions()
     user_agent = latest_user_agents.get_random_user_agent()  # get_random_ua_proxy(constants.USER_AGENTS_FILE)
     options.add_argument(f'user-agent={user_agent}')
@@ -60,7 +60,7 @@ def web_bot(gpu_data):
 
     try:
         add_to_cart_button = WebDriverWait(driver, 10).until(
-            expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, ".add-to-cart-button"))
+            expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, f".{css_id}"))
         )
         add_to_cart_button.click()
         log.info(f"Product {gpu_data['name']} is added to card using link {gpu_data['link']}")
@@ -75,6 +75,7 @@ def web_bot(gpu_data):
 def web_scraper(gpu_data):
     source_url = gpu_data["link"]
     available = False
+    css_id = None
     try:
         headers = {
             'user-agent': latest_user_agents.get_random_user_agent(),  # get_random_ua_proxy(constants.USER_AGENTS_FILE)
@@ -85,16 +86,27 @@ def web_scraper(gpu_data):
         source_page_data = requests.get(source_url, headers=headers, proxies=proxies)
         scrapper = BeautifulSoup(source_page_data.content, 'html.parser')
         if "bestbuy.com" in source_url:
-            button_elements = scrapper.find_all('button', attrs={"class", re.compile("add-to-cart-button", re.I)})
+            button_elements = scrapper.find_all('button', attrs={"class": "add-to-cart-button"})
             if len(button_elements) > 0:
                 for button_element in button_elements:
                     button_attrs = button_element.attrs
+                    css_id = "add-to-cart-button"
                     if button_attrs["data-sku-id"] in source_url and button_attrs["data-button-state"] == "ADD_TO_CART":
+                        available = True
+        elif "bhphotovideo.com" in source_url:
+            button_elements = scrapper.find_all('button', attrs={"data-selenium": "addToCartButton"})
+            if len(button_elements) > 0:
+                for button_element in button_elements:
+                    button_attrs = button_element.attrs
+                    css_id = random.choice(button_attrs["class"])
+                    if any(sub_str in cls_str for cls_str in button_attrs["class"]
+                           for sub_str in ["atcBtn", "toCartBtn", "buttonTheme"]):
                         available = True
         if available:
             log.info(f"GPU - {source_url} is Available. Trying to add the item to the cart in the browser")
             send_push_notifications_android(f"GPU {gpu_data['name']} is available look up under {gpu_data['link']}")
-            web_bot(gpu_data)
+            if css_id:
+                web_bot(gpu_data, css_id)
         else:
             log.info(f"GPU - {source_url} is not Available.")
     except Exception as ex:

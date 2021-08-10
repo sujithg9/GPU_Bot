@@ -29,5 +29,10 @@ TEST_DATA = [
         "name": "Corsair Dominator Platinum RGB 16GB",
         "link": "https://www.bestbuy.com/site/corsair-dominator-platinum-rgb-16gb-2x8gb-3-6-ghz-ddr4-"
                 "c18-desktop-memory-kit-amd-optimized/6450423.p?skuId=6450423",
+    },
+    {
+        "name": "Corsair DeathFire EX Gaming Keyboard",
+        "link": "https://www.bhphotovideo.com/c/product/1461692-REG/cougar_cgr_wxnmb_df2_deathfire_"
+                "ex_gaming_hybrid.html"
     }
 ]
